@@ -1,6 +1,6 @@
 # Ember-cli-ass-butt
 
-This README outlines the details of collaborating on this Ember addon.
+Work in progress.
 
 ## Installation
 

@@ -7,6 +7,7 @@ import Ember from 'ember';
 
 var App;
 var sinon = window.sinon;
+var dbg = Ember.Logger.debug;
 
 moduleForComponent('ass-butt', {
   // specify the other units that are required for this test
@@ -70,6 +71,16 @@ test('setting defaultClass should set its class to that', function(assert) {
   var $component = this.render();
 
   assert.ok($component.hasClass(testClass));
+});
+
+
+test('setting defaultClass should work with more than one class', function(assert) {
+  var component = this.subject({ defaultClass: 'foo bar baz'});
+  var $component = this.render();
+
+  assert.ok($component.hasClass('foo'));
+  assert.ok($component.hasClass('bar'));
+  assert.ok($component.hasClass('baz'));
 });
 
 
@@ -390,4 +401,102 @@ test( 'when action returns a promise and that promise rejects later, ' +
   andThen( function() {
     assert.ok( $component.hasClass('rejected'), 'should not have rejected class' );
   });
+});
+
+
+test( '_statusText should retrieve <status>Text', function(assert) {
+  var expected = 'foo';
+  var result = this.subject()._statusText({
+    status: 'default',
+    defaultText: expected
+  });
+
+  assert.equal(result, expected);
+});
+
+
+test( 'it should render defaultText by default', function(assert) {
+  var expected = 'foo';
+  var component = this.subject({
+    defaultText: expected
+  });
+  var $component = this.render();
+
+  assert.equal($component.text().trim(), expected);
+});
+
+
+test( 'it should render fulfilledText in fulfilled status', function(assert) {
+  var expected = 'foo';
+  var component = this.subject({
+    defaultText:   'bar',
+    fulfilledText: expected,
+    status:        'fulfilled'
+  });
+  var $component = this.render();
+
+  assert.equal($component.text().trim(), expected);
+});
+
+
+test( 'it should render defaultText in fulfilled status if fulfilledText is not provided', function(assert) {
+  var expected = 'foo';
+  var component = this.subject({
+    defaultText:   expected,
+    status:        'fulfilled'
+  });
+  var $component = this.render();
+
+  assert.equal($component.text().trim(), expected);
+});
+
+
+test( 'it should render rejectedText in rejected status', function(assert) {
+  var expected = 'foo';
+  var component = this.subject({
+    defaultText:   'bar',
+    rejectedText:  expected,
+    status:        'rejected'
+  });
+  var $component = this.render();
+
+  assert.equal($component.text().trim(), expected);
+});
+
+
+test( 'it should render defaultText in rejected status if rejectedText is not provided', function(assert) {
+  var expected = 'foo';
+  var component = this.subject({
+    defaultText:   expected,
+    status:        'rejected'
+  });
+  var $component = this.render();
+
+  assert.equal($component.text().trim(), expected);
+});
+
+
+
+test( 'it should render pendingText in pending status', function(assert) {
+  var expected = 'foo';
+  var component = this.subject({
+    defaultText:   'bar',
+    pendingText:  expected,
+    status:        'pending'
+  });
+  var $component = this.render();
+
+  assert.equal($component.text().trim(), expected);
+});
+
+
+test( 'it should render defaultText in pending status if pendingText is not provided', function(assert) {
+  var expected = 'foo';
+  var component = this.subject({
+    defaultText:   expected,
+    status:        'pending'
+  });
+  var $component = this.render();
+
+  assert.equal($component.text().trim(), expected);
 });
