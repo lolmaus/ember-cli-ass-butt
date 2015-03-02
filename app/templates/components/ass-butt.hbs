@@ -1,2 +1,8 @@
-{{statusText}}
-{{yield}}
+<span class="assButt-content">
+
+  {{#if iconClass}}
+    <span {{bind-attr class=":assButt-icon iconClassFinal iconDefaultClassFinal iconPendingClassFinal"}}></span>
+  {{/if}}
+
+  <span class="assButt-status">{{statusText}}</span>
+</span>

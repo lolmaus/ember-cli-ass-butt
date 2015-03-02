@@ -277,7 +277,7 @@ test( 'when action returns a promise and that promise rejects immediately, ' +
 });
 
 
-test( 'when action returns a promise and that promise does not resolve immediately, ' +
+test( 'when action returns a promise and that promise does not resolve/reject immediately, ' +
       'it should not change class to fullfilled', function(assert)
 {
   var resolver;
@@ -288,8 +288,6 @@ test( 'when action returns a promise and that promise does not resolve immediate
   var spy = sinon.spy( function(promiseResolver) {
     promiseResolver( promise );
   });
-
-  Ember.run.later(resolver);
 
   var targetObject = {externalAction: spy};
 
@@ -304,44 +302,15 @@ test( 'when action returns a promise and that promise does not resolve immediate
 
   assert.ok( $component.hasClass('pending'), 'should have pending class' );
   assert.ok( !$component.hasClass('fulfilled'), 'should not have fulfilled class' );
-});
-
-
-
-test( 'when action returns a promise and that promise does not reject immediately, ' +
-      'it should not change class to rejected', function(assert)
-{
-  var rejector;
-  var promise = new Ember.RSVP.Promise( function(resolve, reject) {
-    rejector = reject;
-  });
-
-  var spy = sinon.spy( function(promiseResolver) {
-    promiseResolver( promise );
-  });
-
-  Ember.run.later(rejector);
-
-  var targetObject = {externalAction: spy};
-
-  var component = this.subject({
-    targetObject: targetObject,
-    action: 'externalAction'
-  });
-
-  var $component = this.render();
-
-  click( $component );
-
-  assert.ok( $component.hasClass('pending'), 'should have pending class' );
   assert.ok( !$component.hasClass('rejected'), 'should not have rejected class' );
 });
-
 
 
 test( 'when action returns a promise and that promise resolves later, ' +
 'it should change class to fullfilled', function(assert)
 {
+  assert.expect(1);
+
   var resolver;
   var promise = new Ember.RSVP.Promise( function(resolve) {
     resolver = resolve;
@@ -375,6 +344,8 @@ test( 'when action returns a promise and that promise resolves later, ' +
 test( 'when action returns a promise and that promise rejects later, ' +
 'it should change class to rejected', function(assert)
 {
+  assert.expect(1);
+
   var rejector;
   var promise = new Ember.RSVP.Promise( function(resolve, reject) {
     rejector = reject;
@@ -499,4 +470,376 @@ test( 'it should render defaultText in pending status if pendingText is not prov
   var $component = this.render();
 
   assert.equal($component.text().trim(), expected);
+});
+
+
+
+
+test( 'the action should not be run more than once while the promise is not fulfilled', function(assert)
+{
+  assert.expect(1);
+
+  var resolver;
+  var promise = new Ember.RSVP.Promise( function(resolve) {
+    resolver = resolve;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction'
+  });
+
+  var $component = this.render();
+
+  click($component);
+  click($component);
+
+  andThen( function() {
+    resolver();
+    assert.equal(spy.callCount, 1, 'action should run once');
+  });
+});
+
+
+test( 'the action should run more than once while the promise is not fulfilled if disable is false', function(assert)
+{
+  assert.expect(1);
+
+  var resolver;
+  var promise = new Ember.RSVP.Promise( function(resolve) {
+    resolver = resolve;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction',
+    disable: false
+  });
+
+  var $component = this.render();
+
+  click($component);
+  click($component);
+
+  andThen( function() {
+    resolver();
+    assert.equal(spy.callCount, 2, 'action should run once');
+  });
+});
+
+
+
+
+test( 'the button should be disabled while pending', function(assert)
+{
+  assert.expect(3);
+
+  var resolver;
+  var promise = new Ember.RSVP.Promise( function(resolve) {
+    resolver = resolve;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction'
+  });
+
+  var $component = this.render();
+
+  assert.ok( !$component.attr('disabled'), 'initially the button should not be disabled' );
+
+  click( $component );
+
+  assert.ok( $component.attr('disabled'), 'the button should become disabled after click' );
+
+  Ember.run.later(resolver);
+
+  andThen( function() {
+    assert.ok( !$component.attr('disabled'), 'the button should become non-disabled after action has been resolved' );
+  });
+});
+
+
+test( 'the button not should be disabled while pending if disable is set to false', function(assert)
+{
+  var resolver;
+  var promise = new Ember.RSVP.Promise( function(resolve) {
+    resolver = resolve;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction',
+    disable: false
+  });
+
+  var $component = this.render();
+
+  assert.ok( !$component.attr('disabled'), 'initially the button should not be disabled' );
+
+  click( $component );
+
+  assert.ok( !$component.attr('disabled'), 'the button should not become disabled after click' );
+
+});
+
+
+
+test( "the button should return to default state after revertMs if it's set", function(assert)
+{
+  assert.expect(1);
+
+  var resolver;
+
+  var promise = new Ember.RSVP.Promise( function(resolve) {
+    resolver = resolve;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction',
+    revertMs: 200
+  });
+
+  var $component = this.render();
+
+  click( $component );
+
+  resolver();
+
+  andThen( function() {
+    assert.equal( component.get('status'), 'default', 'it should revert to the default status after revertMs' );
+  }.bind(this));
+});
+
+
+
+test( "the button should not return to default state after revertMs if it's set", function(assert)
+{
+  assert.expect(1);
+
+  var resolver;
+
+  var promise = new Ember.RSVP.Promise( function(resolve) {
+    resolver = resolve;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction'
+  });
+
+  var $component = this.render();
+
+  click( $component );
+
+  resolver();
+
+  andThen( function() {
+    assert.equal( component.get('status'), 'fulfilled', 'it should not revert to the default status after revertMs' );
+  }.bind(this));
+});
+
+
+
+test( "the component should not crash if promise is fulfilled after the component is destroyed", function(assert)
+{
+  assert.expect(0);
+
+  var resolver;
+
+  var promise = new Ember.RSVP.Promise( function(resolve) {
+    resolver = resolve;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction'
+  });
+
+  var $component = this.render();
+
+  click( $component );
+
+  Ember.run( function() {
+    component.destroy();
+  });
+
+  resolver();
+});
+
+
+
+test( "the component should not crash if promise is rejeceted after the component is destroyed", function(assert)
+{
+  assert.expect(0);
+
+  var rejector;
+
+  var promise = new Ember.RSVP.Promise( function(resolve, reject) {
+    rejector = reject;
+  });
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( promise );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction'
+  });
+
+  var $component = this.render();
+
+  click( $component );
+
+  Ember.run( function() {
+    component.destroy();
+  });
+
+  rejector();
+});
+
+
+test( "the component should not crash if promise is initially resolved and the component is destroyed", function(assert)
+{
+  assert.expect(0);
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( Ember.RSVP.resolve() );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction'
+  });
+
+  var $component = this.render();
+
+  click( $component );
+
+  Ember.run( function() {
+    component.destroy();
+  });
+});
+
+
+test( "the component should not crash if promise is initially rejected and the component is destroyed", function(assert)
+{
+  assert.expect(0);
+
+  var spy = sinon.spy( function(promiseResolver) {
+    promiseResolver( Ember.RSVP.reject() );
+  });
+
+  var targetObject = {externalAction: spy};
+
+  var component = this.subject({
+    targetObject: targetObject,
+    action: 'externalAction'
+  });
+
+  var $component = this.render();
+
+  click( $component );
+
+  Ember.run( function() {
+    component.destroy();
+  });
+});
+
+
+test( "button should not have icon by default", function(assert)
+{
+  this.subject();
+  var $component = this.render();
+  var $icon = $component.find('.assButt-icon');
+
+  assert.equal( $icon.length, 0, 'amount of icons in button should be 0' );
+});
+
+
+
+test( "button should have icon if iconClass is provided", function(assert)
+{
+  this.subject({iconClass: 'foo'});
+  var $component = this.render();
+  var $icon = $component.find('.assButt-icon');
+
+  assert.equal( $icon.length, 1, 'amount of icons in button should be 1' );
+  assert.ok( $icon.hasClass('foo'), 'icon should have the iconClass class' );
+});
+
+
+test( 'icon should have defaultClass in default status', function(assert) {
+  var component = this.subject({
+    iconClass:         true,
+    iconDefaultClass:  'bar',
+    status:            'default'
+  });
+  var $component = this.render();
+  var $icon = $component.find('.assButt-icon');
+
+  dbg($component[0]);
+
+  assert.ok( $icon.hasClass('bar'), 'icon should have the iconDefaultClass class during defuault status' );
+});
+
+
+test( 'icon should have pendingClass in pending status', function(assert) {
+  var component = this.subject({
+    iconClass:         true,
+    iconPendingClass:  'baz',
+    status:            'pending'
+  });
+  var $component = this.render();
+  var $icon = $component.find('.assButt-icon');
+
+  assert.ok( $icon.hasClass('baz'), 'icon should have the iconPendingClass class during pending status' );
 });
