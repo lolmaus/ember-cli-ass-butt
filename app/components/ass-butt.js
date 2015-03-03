@@ -134,5 +134,15 @@ export default Ember.Component.extend({
   iconPendingClassFinal: Ember.computed( 'status', 'iconPendingClass', function() {
     if (this.get('status') === 'pending') { return this.get('iconPendingClass'); }
     else { return ''; }
+  }),
+
+  iconFulfilledClassFinal: Ember.computed( 'status', 'iconFulfilledClass', function() {
+    if (this.get('status') === 'fulfilled') { return this.get('iconFulfilledClass'); }
+    else { return ''; }
+  }),
+
+  iconRejectedClassFinal: Ember.computed( 'status', 'iconRejectedClass', function() {
+    if (this.get('status') === 'rejected') { return this.get('iconRejectedClass'); }
+    else { return ''; }
   })
 });

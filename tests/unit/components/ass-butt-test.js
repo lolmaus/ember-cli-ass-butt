@@ -819,8 +819,11 @@ test( "button should have icon if iconClass is provided", function(assert)
 
 test( 'icon should have defaultClass in default status', function(assert) {
   var component = this.subject({
-    iconClass:         true,
-    iconDefaultClass:  'bar',
+    iconClass:          true,
+    iconDefaultClass:   'foo',
+    iconPendingClass:   'bar',
+    iconFulfilledClass: 'baz',
+    iconRejectedClass:  'quux',
     status:            'default'
   });
   var $component = this.render();
@@ -828,18 +831,65 @@ test( 'icon should have defaultClass in default status', function(assert) {
 
   dbg($component[0]);
 
-  assert.ok( $icon.hasClass('bar'), 'icon should have the iconDefaultClass class during defuault status' );
+  assert.ok( $icon.hasClass('foo'), 'icon should have the iconDefaultClass class during defuault status' );
+  assert.ok( !$icon.hasClass('bar'), 'icon should not have the iconPendingClass class during defuault status' );
+  assert.ok( !$icon.hasClass('baz'), 'icon should not have the iconFulfilledClass class during defuault status' );
+  assert.ok( !$icon.hasClass('quux'), 'icon should not have the iconRejectedClass class during defuault status' );
 });
 
 
 test( 'icon should have pendingClass in pending status', function(assert) {
   var component = this.subject({
     iconClass:         true,
-    iconPendingClass:  'baz',
+    iconDefaultClass:   'foo',
+    iconPendingClass:   'bar',
+    iconFulfilledClass: 'baz',
+    iconRejectedClass:  'quux',
     status:            'pending'
   });
   var $component = this.render();
   var $icon = $component.find('.assButt-icon');
 
-  assert.ok( $icon.hasClass('baz'), 'icon should have the iconPendingClass class during pending status' );
+  assert.ok( $icon.hasClass('bar'), 'icon should have the iconPendingClass class during pending status' );
+  assert.ok( !$icon.hasClass('foo'), 'icon should not have the iconDefaultClass class during pending status' );
+  assert.ok( !$icon.hasClass('baz'), 'icon should not have the iconFulfilledClass class during pending status' );
+  assert.ok( !$icon.hasClass('quux'), 'icon should not have the iconRejectedClass class during pending status' );
+});
+
+
+test( 'icon should have iconFulfilledClass in rejected status', function(assert) {
+  var component = this.subject({
+    iconClass:         true,
+    iconDefaultClass:   'foo',
+    iconPendingClass:   'bar',
+    iconFulfilledClass: 'baz',
+    iconRejectedClass:  'quux',
+    status:             'fulfilled'
+  });
+  var $component = this.render();
+  var $icon = $component.find('.assButt-icon');
+
+  assert.ok( $icon.hasClass('baz'), 'icon should have the iconFulfilledClass class during rejected status' );
+  assert.ok( !$icon.hasClass('foo'), 'icon should not have the iconDefaultClass class during rejected status' );
+  assert.ok( !$icon.hasClass('bar'), 'icon should not have the iconPendingClass class during rejected status' );
+  assert.ok( !$icon.hasClass('quux'), 'icon should not have the iconRejectedClass class during rejected status' );
+});
+
+
+test( 'icon should have iconRejectedClass in rejected status', function(assert) {
+  var component = this.subject({
+    iconClass:         true,
+    iconDefaultClass:   'foo',
+    iconPendingClass:   'bar',
+    iconFulfilledClass: 'baz',
+    iconRejectedClass:  'quux',
+    status:            'rejected'
+  });
+  var $component = this.render();
+  var $icon = $component.find('.assButt-icon');
+
+  assert.ok( $icon.hasClass('quux'), 'icon should have the iconRejectedClass class during rejected status' );
+  assert.ok( !$icon.hasClass('foo'), 'icon should not have the iconDefaultClass class during rejected status' );
+  assert.ok( !$icon.hasClass('bar'), 'icon should not have the iconPendingClass class during rejected status' );
+  assert.ok( !$icon.hasClass('baz'), 'icon should not have the iconFulfilledClass class during rejected status' );
 });
